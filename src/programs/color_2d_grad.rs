@@ -6,9 +6,9 @@ use super::super::common_funcs as cf;
 
 pub struct Color2DGrad {
   program: WebGlProgram,
+  color_buffer: WebGlBuffer,
   index_count: i32,
   rect_vertice_buffer: WebGlBuffer,
-  u_color: WebGlUniformLocation,
   u_opacity: WebGlUniformLocation,
   u_transform: WebGlUniformLocation,
 }
@@ -72,8 +72,8 @@ impl Color2DGrad {
       gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
 
     Self {
+      color_buffer: gl.create_buffer().ok_or("Failure to create buffer").unwrap(),
       index_count: indices_rect.len() as i32,
-      u_color: gl.get_uniform_location(&program, "uColor").unwrap(),
       u_opacity: gl.get_uniform_location(&program, "uOpacity").unwrap(),
       u_transform: gl.get_uniform_location(&program, "uTransform").unwrap(),
       rect_vertice_buffer: buffer_rect,
@@ -93,6 +93,7 @@ impl Color2DGrad {
   ) {
     gl.use_program(Some(&self.program));
 
+    // Bind is like... which buffer you want the next calls to refer to?
     gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.rect_vertice_buffer));
 
     /*
@@ -110,8 +111,38 @@ impl Color2DGrad {
     gl.vertex_attrib_pointer_with_i32(0, 2, GL::FLOAT, false, 0, 0);
     gl.enable_vertex_attrib_array(0);
 
-    // r, g, b, a (opacity)
-    gl.uniform4f(Some(&self.u_color), 0.5, 0., 0., 1.0);
+    /*
+      Setup colors
+
+      They are in the render function so that they can update on each call.
+      Normally you would want to make them parameters of the render function.
+    */
+    gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
+    gl.vertex_attrib_pointer_with_i32(1, 4, GL::FLOAT, false, 0, 0);
+    gl.enable_vertex_attrib_array(1);
+
+    let colors: [f32; 16] = [
+      // r, g, b, a (opacity) for each vertex 
+      1., 0., 0., 1.,
+      0., 1., 0., 1.,
+      0., 0., 1., 1.,
+      1., 1., 1., 1.,
+    ];
+
+    let colors_memory_buffer = wasm_bindgen::memory()
+      .dyn_into::<WebAssembly::Memory>()
+      .unwrap()
+      .buffer();
+    let color_vals_location = colors.as_ptr() as u32 / 4;
+    let color_vals_array = js_sys::Float32Array::new(&colors_memory_buffer)
+        .subarray(
+          color_vals_location,
+          color_vals_location + colors.len() as u32
+        );
+    gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_vals_array, GL::DYNAMIC_DRAW);
+
+
+    // Global opacity
     gl.uniform1f(Some(&self.u_opacity), 1.);
 
     // The bellow is too much for 2D but gets hard in 3d
