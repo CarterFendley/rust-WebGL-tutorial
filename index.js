@@ -8,11 +8,6 @@ rust.then(m => {
     return;
   }
 
-  // Allow things to be transparent (for fading in and out)
-  gl.enable(gl.BLEND);
-  // Blending technique
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
   const FPS_THROTTLE = 1000.0 / 30.0; // Milliseconds / frames
   const carterClient = new m.CartersClient();
   const initialTime = Date.now();
