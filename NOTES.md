@@ -25,3 +25,41 @@ https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API
 
 Counter clock wise definition of points
   - When transparency not enabled, Can figure out if something is pointed away from you
+
+## Steps in 3D video
+-Create a Grid on the XZ plane
+  - Can think of like a floor not a wall
+- Rotate the Graph
+  - Mouse events
+- Add Y values
+- Color Graph based on Height
+- Color graph based on simulated light
+
+
+## Interesting indexing error
+
+The `.as_ptr() as u32 / 4` and `.as_ptr() as u32 / 2` things are very confusing. Initially I had nothing rendering on the screen and only when I changed the `.as_ptr() as u32 / 2` line to look like the following did I get something to show up.
+
+```rust
+let indices_location = positions_and_indices.1.as_ptr() as u32 / 4;
+```
+
+Looking at [others asking about this code](https://github.com/dmilford/rust-3d-demo/issues/2) I eventually notices the following mistake.
+
+```rust
+// I had this
+let indices_array = js_sys::Float32Array::new(&indices_memory_buffer).subarray(
+    indices_location,
+    indices_location + positions_and_indices.1.len() as u32
+  );
+
+// Instead of this
+let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer).subarray(
+    indices_location,
+    indices_location + positions_and_indices.1.len() as u32
+  );
+```
+
+When I changed to the second way the `.as_ptr() as u32 / 2` worked. This is kind of odd to me that the operation which I believe to be [resizing the buffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray). Should care at all about the location of the rust pointer. 
+
+TODO: Maybe there is a place for using some other way to match the size of the arrays?

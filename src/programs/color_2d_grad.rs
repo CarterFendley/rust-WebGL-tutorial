@@ -6,6 +6,7 @@ use crate::log;
 
 use super::super::common_funcs as cf;
 
+#[allow(dead_code)]
 pub struct Color2DGrad {
   program: WebGlProgram,
   position_index: u32,
@@ -17,12 +18,13 @@ pub struct Color2DGrad {
   u_transform: WebGlUniformLocation,
 }
 
+#[allow(dead_code)]
 impl Color2DGrad {
   pub fn new(gl: &WebGlRenderingContext) -> Self {
     let program = cf::link_program(
       &gl,
       super::super::shaders::vertex::color_2d_grad::SHADER,
-      super::super::shaders::fragment::color_2d_grad::SHADER,
+      super::super::shaders::fragment::vary_color_from_vertex::SHADER,
     ).unwrap();
     
     let vertices_rect: [f32; 8] = [

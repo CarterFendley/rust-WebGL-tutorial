@@ -27,7 +27,8 @@ pub fn say_hello_from_rust() {
 pub struct CartersClient {
   gl: WebGlRenderingContext,
   program_color_2d: programs::Color2D,
-  program_color_2d_grad: programs::Color2DGrad,
+  _program_color_2d_grad: programs::Color2DGrad,
+  program_graph_3d: programs::Graph3D,
 }
 
 #[wasm_bindgen]
@@ -38,7 +39,8 @@ impl CartersClient {
     let gl = gl_setup::initialize_webgl_context().unwrap();
     Self {
       program_color_2d: programs::Color2D::new(&gl),
-      program_color_2d_grad: programs::Color2DGrad::new(&gl),
+      _program_color_2d_grad: programs::Color2DGrad::new(&gl),
+      program_graph_3d: programs::Graph3D::new(&gl),
       gl: gl
     }
   }
@@ -61,15 +63,30 @@ impl CartersClient {
       curr_state.control_left,
       curr_state.control_right,
       curr_state.canvas_height,
-      curr_state.canvas_width);
+      curr_state.canvas_width
+    );
 
-      self.program_color_2d_grad.render(
-        &self.gl,
-        curr_state.control_bottom + 20.,
-        curr_state.control_top - 20.,
-        curr_state.control_left + 20.,
-        curr_state.control_right - 20.,
-        curr_state.canvas_height,
-        curr_state.canvas_width);
+    /*
+    self.program_color_2d_grad.render(
+      &self.gl,
+      curr_state.control_bottom + 20.,
+      curr_state.control_top - 20.,
+      curr_state.control_left + 20.,
+      curr_state.control_right - 20.,
+      curr_state.canvas_height,
+      curr_state.canvas_width
+    ); */
+
+    self.program_graph_3d.render(
+      &self.gl,
+      curr_state.control_bottom,
+      curr_state.control_top,
+      curr_state.control_left,
+      curr_state.control_right,
+      curr_state.canvas_height,
+      curr_state.canvas_width,
+      0.5,
+      0.5,
+    );
   }
 }
