@@ -85,8 +85,8 @@ impl CartersClient {
       curr_state.control_right,
       curr_state.canvas_height,
       curr_state.canvas_width,
-      0.5,
-      0.5,
+      curr_state.rotation_x_axis,
+      curr_state.rotation_y_axis,
     );
   }
 }
