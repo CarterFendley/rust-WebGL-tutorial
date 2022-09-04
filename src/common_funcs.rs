@@ -2,6 +2,16 @@ use nalgebra::{Matrix4,Perspective3};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
+use crate::constants::*;
+
+pub fn get_updated_3d_y_values(curr_time: f32) -> Vec<f32> {
+    let point_count_per_row = GRID_SIZE + 1;
+    let mut y_vals: Vec<f32> = vec![0.; point_count_per_row * point_count_per_row];
+
+    y_vals[25] = 1.;
+    return y_vals;
+}
+
 pub fn get_3d_projection_matrix(
     bottom: f32,
     top: f32,
@@ -12,17 +22,6 @@ pub fn get_3d_projection_matrix(
     rotation_angle_x_axis: f32,
     rotation_angle_y_axis: f32,
 ) -> [f32; 16] {
-    const FIELD_OF_VIEW: f32 = 45. * std::f32::consts::PI / 180.; // In radians
-    
-    // How far away and close do you stop rendering objects
-    const Z_FAR: f32 = 100.;
-    const Z_NEAR: f32 = 0.1;
-
-    /*
-     * How far the Z plane is away from you (based on the 45. deg FOV)
-     */
-    const Z_PLANE: f32 = -2.414213; // -1 / tan(pi /8)
-
     // Matrices to rotate the objects around x and y axises
     let rotate_x_axis: [f32; 16] = [
         1., 0.,                          0.,                            0.,

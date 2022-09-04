@@ -8,6 +8,7 @@ extern crate lazy_static;
 
 mod app_state;
 mod gl_setup;
+mod constants;
 mod common_funcs;
 mod programs;
 mod shaders;
@@ -87,6 +88,7 @@ impl CartersClient {
       curr_state.canvas_width,
       curr_state.rotation_x_axis,
       curr_state.rotation_y_axis,
+      &common_funcs::get_updated_3d_y_values(curr_state.time),
     );
   }
 }

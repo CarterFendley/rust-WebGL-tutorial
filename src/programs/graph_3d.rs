@@ -8,7 +8,10 @@ pub struct Graph3D {
   pub program: WebGlProgram,
   pub indices_buffer: WebGlBuffer,
   pub index_count: i32,
+  pub position_index: u32,
   pub position_buffer: WebGlBuffer,
+  pub y_index: u32,
+  pub y_buffer: WebGlBuffer,
   pub u_opacity: WebGlUniformLocation,
   pub u_projection: WebGlUniformLocation
 }
@@ -53,11 +56,13 @@ impl Graph3D {
     Self {
       u_opacity: gl.get_uniform_location(&program, "uOpacity").unwrap(),
       u_projection: gl.get_uniform_location(&program, "uProjection").unwrap(),
+      y_index: gl.get_attrib_location(&program, "aY") as u32,
+      position_index: gl.get_attrib_location(&program, "aPosition") as u32,
       program: program,
       indices_buffer: buffer_indices,
       index_count: indices_array.length() as i32,
-      position_buffer: buffer_position
-
+      position_buffer: buffer_position,
+      y_buffer: gl.create_buffer().ok_or("Failed to create buffer").unwrap(),
     }
   }
 
@@ -72,6 +77,7 @@ impl Graph3D {
     canvas_width: f32,
     rotation_angle_x_axis: f32,
     rotation_angle_y_axis: f32,
+    y_vals: &Vec<f32>
   ) {
     gl.use_program(Some(&self.program));
 
@@ -96,8 +102,24 @@ impl Graph3D {
     gl.uniform1f(Some(&self.u_opacity), 1.);
 
     gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));
-    gl.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
-    gl.enable_vertex_attrib_array(0);
+    gl.vertex_attrib_pointer_with_i32(self.position_index, 3, GL::FLOAT, false, 0, 0);
+    gl.enable_vertex_attrib_array(self.position_index);
+
+    gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.y_buffer));
+    gl.vertex_attrib_pointer_with_i32(self.y_index, 1, GL::FLOAT, false, 0, 0);
+    gl.enable_vertex_attrib_array(self.y_index);
+
+    // Buffer the y data
+    let y_memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let y_location = y_vals.as_ptr() as u32 / 4;
+    let y_array = js_sys::Float32Array::new(&y_memory_buffer).subarray(
+        y_location,
+        y_location + y_vals.len() as u32,
+    );
+    gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &y_array, GL::DYNAMIC_DRAW);
 
     gl.draw_elements_with_i32(GL::TRIANGLES, self.index_count, GL::UNSIGNED_SHORT, 0)
   }
