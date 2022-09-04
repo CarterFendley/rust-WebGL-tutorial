@@ -2,10 +2,14 @@ use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 use js_sys::WebAssembly;
+use crate::log;
+
 use super::super::common_funcs as cf;
 
 pub struct Color2DGrad {
   program: WebGlProgram,
+  position_index: u32,
+  color_index: u32,
   color_buffer: WebGlBuffer,
   index_count: i32,
   rect_vertice_buffer: WebGlBuffer,
@@ -20,7 +24,6 @@ impl Color2DGrad {
       super::super::shaders::vertex::color_2d_grad::SHADER,
       super::super::shaders::fragment::color_2d_grad::SHADER,
     ).unwrap();
-
     
     let vertices_rect: [f32; 8] = [
       0., 1., // x, y
@@ -31,7 +34,7 @@ impl Color2DGrad {
 
     // Rectangle made up of two triangles
     // Counter clock wise
-    // This is less data efficient with a square but with many verticies gets fasters 
+    // This is less data efficient with a square but with many vertices gets faster
     let indices_rect: [u16; 6] = [0, 1, 2, 2, 1, 3];
 
     
@@ -46,6 +49,16 @@ impl Color2DGrad {
         vertices_location + vertices_rect.len() as u32
       );
       let buffer_rect = gl.create_buffer().ok_or("Failed to create buffer").unwrap();
+      gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_rect));
+      /*
+       * Put the array close to GPU memory.
+       *
+       * For different efficiences
+       * STATIC_DRAW = Buffer will not be updated often.
+       * DYNAMIC_DRAW = Buffer will be updated
+       * STREAM_DRAW = Use buffer once and only once
+       */
+      gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
 
       let indices_memory_buffer = wasm_bindgen::memory()
         .dyn_into::<WebAssembly::Memory>()
@@ -60,19 +73,10 @@ impl Color2DGrad {
       gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
       gl.buffer_data_with_array_buffer_view(GL::ELEMENT_ARRAY_BUFFER, &indices_array, GL::STATIC_DRAW);
 
-      gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_rect));
-      /*
-       * Put the array close to GPU memory. 
-       * 
-       * For different efficiences
-       * STATIC_DRAW = Buffer will not be updated often.
-       * DYNAMIC_DRAW = Buffer will be updated
-       * STREAM_DRAW = Use buffer once and only once
-       */
-      gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
-
     Self {
       color_buffer: gl.create_buffer().ok_or("Failure to create buffer").unwrap(),
+      position_index: gl.get_attrib_location(&program, "aPosition") as u32,
+      color_index: gl.get_attrib_location(&program, "aColor") as u32,
       index_count: indices_rect.len() as i32,
       u_opacity: gl.get_uniform_location(&program, "uOpacity").unwrap(),
       u_transform: gl.get_uniform_location(&program, "uTransform").unwrap(),
@@ -93,6 +97,8 @@ impl Color2DGrad {
   ) {
     gl.use_program(Some(&self.program));
 
+    //log(&format!("Color: {}, Position: {}", self.color_index, self.position_index));
+
     // Bind is like... which buffer you want the next calls to refer to?
     gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.rect_vertice_buffer));
 
@@ -104,12 +110,11 @@ impl Color2DGrad {
 
       Type: What data type to expect
       Normalized: ??
-      
+
       Stride & Data used for when you have a buffer that contains more information than just the one you want to pull out
      */
-    // 
-    gl.vertex_attrib_pointer_with_i32(0, 2, GL::FLOAT, false, 0, 0);
-    gl.enable_vertex_attrib_array(0);
+    gl.vertex_attrib_pointer_with_i32(self.position_index, 2, GL::FLOAT, false, 0, 0);
+    gl.enable_vertex_attrib_array(self.position_index);
 
     /*
       Setup colors
@@ -117,9 +122,9 @@ impl Color2DGrad {
       They are in the render function so that they can update on each call.
       Normally you would want to make them parameters of the render function.
     */
-    gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
-    gl.vertex_attrib_pointer_with_i32(1, 4, GL::FLOAT, false, 0, 0);
-    gl.enable_vertex_attrib_array(1);
+    gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));    
+    gl.vertex_attrib_pointer_with_i32(self.color_index, 4, GL::FLOAT, false, 0, 0);
+    gl.enable_vertex_attrib_array(self.color_index);
 
     let colors: [f32; 16] = [
       // r, g, b, a (opacity) for each vertex 
