@@ -63,3 +63,10 @@ let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer).subarray(
 When I changed to the second way the `.as_ptr() as u32 / 2` worked. This is kind of odd to me that the operation which I believe to be [resizing the buffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray). Should care at all about the location of the rust pointer. 
 
 TODO: Maybe there is a place for using some other way to match the size of the arrays?
+
+## There is something wrong with the 3d
+
+[Here](https://youtu.be/K63uBfs1K7Y?t=2027) he shows the 3d perfectly mapping onto the "2d control" and claims that the Z value of 2.41... does this based on the 45 deg layout. Mine does not currently do this. He notes this is helpful if you have multiple graphs... but is just nice for predicetiblity too.
+
+TODO: Look into this.
+
