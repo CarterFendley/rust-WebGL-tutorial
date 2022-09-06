@@ -13,6 +13,7 @@ pub struct Color2DGrad {
   color_index: u32,
   color_buffer: WebGlBuffer,
   index_count: i32,
+  indices_buffer: WebGlBuffer,
   rect_vertice_buffer: WebGlBuffer,
   u_opacity: WebGlUniformLocation,
   u_transform: WebGlUniformLocation,
@@ -79,6 +80,7 @@ impl Color2DGrad {
       color_buffer: gl.create_buffer().ok_or("Failure to create buffer").unwrap(),
       position_index: gl.get_attrib_location(&program, "aPosition") as u32,
       color_index: gl.get_attrib_location(&program, "aColor") as u32,
+      indices_buffer: buffer_indices,
       index_count: indices_rect.len() as i32,
       u_opacity: gl.get_uniform_location(&program, "uOpacity").unwrap(),
       u_transform: gl.get_uniform_location(&program, "uTransform").unwrap(),
@@ -178,6 +180,7 @@ impl Color2DGrad {
     gl.uniform_matrix4fv_with_f32_array(Some(&self.u_transform), false, &transformation_matrix);
 
     //gl.draw_arrays(GL::TRIANGLES, 0, (self.rect_vertice_ary_length as i32 / 2) as i32);
+    gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices_buffer));
     gl.draw_elements_with_i32(GL::TRIANGLES, self.index_count, GL::UNSIGNED_SHORT, 0)
   }
 }
