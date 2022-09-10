@@ -8,9 +8,24 @@ pub fn get_updated_3d_y_values(curr_time: f32) -> Vec<f32> {
     let point_count_per_row = GRID_SIZE + 1;
     let mut y_vals: Vec<f32> = vec![0.; point_count_per_row * point_count_per_row];
 
-    y_vals[25] = 1.;
-    y_vals[38] = -1.;
-    
+    // Find the center
+    let half_grid: f32 = point_count_per_row as f32 / 2.;
+    let frequency_scale: f32 = 3. * std::f32::consts::PI;
+    let y_scale = 1.0;
+
+    for z in 0..point_count_per_row {
+        for x in 0..point_count_per_row {
+            let use_y_index = z * point_count_per_row + x;
+            
+            // [0, 1] range from the center
+            let scaled_x = frequency_scale * (x as f32 - half_grid) / half_grid;
+            let scaled_y: f32 = frequency_scale * (z as f32 - half_grid) / half_grid;
+
+            let dst_to_point = (scaled_x * scaled_x + scaled_y * scaled_y).sqrt();
+            y_vals[use_y_index] = y_scale * dst_to_point.sin();
+        }
+    }
+
     return y_vals;
 }
 

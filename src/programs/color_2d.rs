@@ -4,6 +4,7 @@ use web_sys::*;
 use js_sys::WebAssembly;
 use super::super::common_funcs as cf;
 
+#[allow(dead_code)]
 pub struct Color2D {
   program: WebGlProgram,
   rect_vertice_ary_length: usize,
@@ -13,6 +14,7 @@ pub struct Color2D {
   u_transform: WebGlUniformLocation,
 }
 
+#[allow(dead_code)]
 impl Color2D {
   pub fn new(gl: &WebGlRenderingContext) -> Self {
     let program = cf::link_program(

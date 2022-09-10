@@ -27,7 +27,7 @@ pub fn say_hello_from_rust() {
 #[wasm_bindgen]
 pub struct CartersClient {
   gl: WebGlRenderingContext,
-  program_color_2d: programs::Color2D,
+  _program_color_2d: programs::Color2D,
   _program_color_2d_grad: programs::Color2DGrad,
   program_graph_3d: programs::Graph3D,
 }
@@ -39,7 +39,7 @@ impl CartersClient {
     console_error_panic_hook::set_once();
     let gl = gl_setup::initialize_webgl_context().unwrap();
     Self {
-      program_color_2d: programs::Color2D::new(&gl),
+      _program_color_2d: programs::Color2D::new(&gl),
       _program_color_2d_grad: programs::Color2DGrad::new(&gl),
       program_graph_3d: programs::Graph3D::new(&gl),
       gl: gl
@@ -57,6 +57,7 @@ impl CartersClient {
 
     let curr_state = app_state::get_curr_state();
 
+    /*
     self.program_color_2d.render(
       &self.gl,
       curr_state.control_bottom,
@@ -66,6 +67,7 @@ impl CartersClient {
       curr_state.canvas_height,
       curr_state.canvas_width
     );
+    */
 
     /*
     self.program_color_2d_grad.render(
