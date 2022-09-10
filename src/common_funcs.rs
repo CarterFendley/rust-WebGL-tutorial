@@ -1,8 +1,77 @@
-use nalgebra::{Matrix4,Perspective3};
+use nalgebra::{Matrix4,Perspective3, norm};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
 use crate::constants::*;
+
+pub fn get_grid_normals(n: usize, y_vals: &Vec<f32>) -> Vec<f32> {
+    let points_per_row = n + 1;
+    let graph_layout_width: f32 = 2.;
+    let square_size: f32 = graph_layout_width / n as f32;
+    let mut return_var: Vec<f32> = vec![0.; 3 * points_per_row * points_per_row];
+
+    for z in 0..points_per_row {
+        for x in 0..points_per_row {
+            let y_val_index_a = z * points_per_row + x;
+            let return_var_start_index = 3 * y_val_index_a;
+        
+            if z == n || x == n {
+                /*
+                * Might see a slight edge on the graph due to this
+                */
+                return_var[return_var_start_index + 1] = 1.; //default
+            } else {
+                let y_val_index_b = y_val_index_a + points_per_row;
+                let y_val_index_c = y_val_index_a + 1;
+
+                let x_val_1 = square_size * x as f32;
+                let x_val_2 = x_val_1 + square_size;
+
+                let z_val_1 = square_size * z as f32;
+                let z_val_2 = z_val_1 + square_size;
+
+                let normals = get_normal_vec(
+                    (x_val_1, y_vals[y_val_index_a], z_val_1),
+                    (x_val_1, y_vals[y_val_index_b], z_val_2),
+                    (x_val_2, y_vals[y_val_index_c], z_val_2),
+                );
+
+                return_var[return_var_start_index + 0] = normals.0;
+                return_var[return_var_start_index + 1] = normals.1;
+                return_var[return_var_start_index + 2] = normals.2;
+            }
+        }
+    }
+
+    return return_var
+}
+
+pub fn get_normal_vec(
+    // x, y, z
+    point_a: (f32, f32, f32),
+    point_b: (f32, f32, f32),
+    point_c: (f32, f32, f32)
+) -> (f32, f32, f32) {
+    let u_x = point_b.0 - point_a.0;
+    let u_y = point_b.1 - point_a.1;
+    let u_z = point_b.2 - point_a.2;
+
+    let v_x = point_c.0 - point_a.0;
+    let v_y = point_c.1 - point_a.1;
+    let v_z = point_c.2 - point_a.2;
+
+    let normal_x = u_y * v_z - v_y * u_z;
+    let normal_y = -1. * (u_x * v_z - v_x * u_z);
+    let normal_z = u_x * v_y - v_x * u_y;
+
+    let normal_size = (normal_x * normal_x + normal_y * normal_y + normal_z * normal_z).sqrt();
+
+    (
+        normal_x / normal_size,
+        normal_y / normal_size,
+        normal_z / normal_size,
+    )
+}
 
 pub fn get_updated_3d_y_values(curr_time: f32) -> Vec<f32> {
     let point_count_per_row = GRID_SIZE + 1;
@@ -29,7 +98,12 @@ pub fn get_updated_3d_y_values(curr_time: f32) -> Vec<f32> {
     return y_vals;
 }
 
-pub fn get_3d_projection_matrix(
+pub struct Matrices3D {
+    pub normals_rotation: [f32; 16],
+    pub projection: [f32; 16]
+}
+
+pub fn get_3d_matrices(
     bottom: f32,
     top: f32,
     left: f32,
@@ -38,7 +112,12 @@ pub fn get_3d_projection_matrix(
     canvas_width: f32,
     rotation_angle_x_axis: f32,
     rotation_angle_y_axis: f32,
-) -> [f32; 16] {
+) -> Matrices3D {
+    let mut return_var = Matrices3D {
+        normals_rotation: [0.; 16],
+        projection: [0.; 16],
+    };
+
     // Matrices to rotate the objects around x and y axises
     let rotate_x_axis: [f32; 16] = [
         1., 0.,                          0.,                            0.,
@@ -88,13 +167,40 @@ pub fn get_3d_projection_matrix(
         Z_NEAR,
         Z_FAR
     );
-    
+
     // Get the resultant matrix from the calculation
     let mut perspective: [f32; 16] = [0.; 16];
     perspective.copy_from_slice(perspective_matrix_tmp.as_matrix().as_slice());
 
-    return mult_matrix_4(combined_transform, perspective)
+    return_var.projection = mult_matrix_4(combined_transform, perspective);
 
+    let normal_matrix = Matrix4::new(
+        rotation_matrix[0],
+        rotation_matrix[1],
+        rotation_matrix[2],
+        rotation_matrix[3],
+        rotation_matrix[4],
+        rotation_matrix[5],
+        rotation_matrix[6],
+        rotation_matrix[7],
+        rotation_matrix[8],
+        rotation_matrix[9],
+        rotation_matrix[10],
+        rotation_matrix[11],
+        rotation_matrix[12],
+        rotation_matrix[13],
+        rotation_matrix[14],
+        rotation_matrix[15],
+    );
+
+    match normal_matrix.try_inverse() {
+        Some(inv) => {
+            return_var.normals_rotation.copy_from_slice(inv.as_slice());
+        }
+        None => {}
+    }
+
+    return return_var
 }
 
 /**
