@@ -69,7 +69,7 @@ impl AppState {
       mouse_x: -1.,
       mouse_y: -1.,
       // Turned in such a way that we can see it at the start
-      rotation_x_axis: 0.5,
+      rotation_x_axis: -0.5,
       rotation_y_axis: 0.5,
       time: 0.,
     }
