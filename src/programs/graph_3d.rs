@@ -1,3 +1,5 @@
+use crate::constants::GRID_SIZE;
+
 use super::super::common_funcs as cf;
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
@@ -24,7 +26,7 @@ impl Graph3D {
       &super::super::shaders::fragment::vary_color_from_vertex::SHADER,
     ).unwrap();
 
-    let positions_and_indices = cf::get_position_grid_n_by_n(10);
+    let positions_and_indices = cf::get_position_grid_n_by_n(GRID_SIZE);
 
     // Bind data so webGL can use it
     let memory_buffer = wasm_bindgen::memory()

@@ -9,6 +9,8 @@ pub fn get_updated_3d_y_values(curr_time: f32) -> Vec<f32> {
     let mut y_vals: Vec<f32> = vec![0.; point_count_per_row * point_count_per_row];
 
     y_vals[25] = 1.;
+    y_vals[38] = -1.;
+    
     return y_vals;
 }
 
