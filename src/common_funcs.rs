@@ -39,7 +39,7 @@ pub fn get_3d_projection_matrix(
     // Pack the transformations together
     let rotation_matrix = mult_matrix_4(rotate_x_axis, rotate_y_axis);
 
-    let aspect_ratio: f32 = canvas_width / canvas_width;
+    let aspect_ratio: f32 = canvas_width / canvas_height;
     let scale_x = (right - left) / canvas_width;
     let scale_y = (top - bottom) / canvas_height;
     let scale_generic = scale_y;
@@ -225,6 +225,13 @@ pub fn translation_matrix(tx: f32, ty: f32, tz: f32) -> [f32; 16]{
     return_var[10] = 1.;
     return_var[15] = 1.;
 
+    /*
+     * Put the tx...tz on the last row of the matrix.
+     *
+     * See: https://webglfundamentals.org/webgl/lessons/webgl-2d-matrices.html
+     *
+     * Search for "Well, let's assume we have a translation" to find the section
+     */
     return_var[12] = tx;
     return_var[13] = ty;
     return_var[14] = tz;
