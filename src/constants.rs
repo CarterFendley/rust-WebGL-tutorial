@@ -1,4 +1,4 @@
-pub const GRID_SIZE: usize = 200;
+pub const GRID_SIZE: usize = 250;
 
 pub const FIELD_OF_VIEW: f32 = 45. * std::f32::consts::PI / 180.; // In radians
 

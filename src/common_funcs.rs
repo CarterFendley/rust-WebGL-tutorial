@@ -81,7 +81,7 @@ pub fn get_updated_3d_y_values(curr_time: f32) -> Vec<f32> {
     let half_grid: f32 = point_count_per_row as f32 / 2.;
     let frequency_scale: f32 = 10. * std::f32::consts::PI;
     let y_scale = 0.15;
-    let sin_offset = curr_time / 500.;
+    let sin_offset = curr_time / 250.;
 
     for z in 0..point_count_per_row {
         for x in 0..point_count_per_row {
